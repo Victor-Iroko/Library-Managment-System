@@ -1,0 +1,248 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["relationJoins", "typedSql"] // run `prisma generate --sql` to generate for type safe sql statements to work
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+// generates a documentation of my schema using
+generator docs {
+  provider = "node node_modules/prisma-docs-generator"
+  output = "../src/public"
+}
+
+// generate zod schemas based on my prisma types
+generator zod {
+  provider = "zod-prisma-types"
+  output   = "../src/schemas/zod-schemas"
+  writeBarrelFiles = false
+  useMultipleFiles = true
+  writeNullishInModelTypes = true
+  createPartialTypes = true
+  createOptionalDefaultValuesTypes = true
+  createInputTypes = false
+  // createRelationValuesTypes = true
+  // coerceDate = false
+}
+
+
+
+
+/// imports are written in reference to the destination file not this prisma file 
+
+model permissions {
+  role userRole @id
+  actions actionsEnum
+  resources resourceEnum
+  fields String
+  conditions conditionEnum
+}
+
+
+enum userRole {
+  ADMIN
+  LIBRARIAN
+  USER
+  NONE
+}
+
+enum resourceEnum {
+  book
+  borrowing
+  cart
+  finePayment
+  isbn
+  notification
+  readHistory
+  reservation
+  user
+}
+
+enum actionsEnum {
+  create
+  read
+  update
+  delete
+}
+
+enum conditionEnum {
+  theirs
+  all
+}
+
+// User model
+/// @zod.import(["import { alreadyExist } from '../../../utils/validation'", "import { user } from '@prisma/client'"])
+model user {
+  id           String          @id @default(uuid()) 
+  name         String           /// @zod.string.min(2).max(50)
+  email        String           @unique /// @zod.custom.use(z.string().email().refine(async (val) => !(await alreadyExist<user>("user", "email", val)), { message: "Email already exists" }))
+  password     String           /// @zod.string.min(8).max(128)
+  phone_number String?          /// @zod.string.regex(/^[0-9]{10,15}$/)
+  role         userRole       
+  refreshToken String?          
+  borrowing    borrowing[]
+  reservation  reservation[]
+  cart         cart[]
+  notification notification[]
+  readHistory  readHistory[]
+  finePayment  finePayment[]
+
+  @@index([role]) 
+}
+
+
+// Book model
+model book {
+  id               String          @id @default(uuid()) 
+  title            String           /// @zod.string.min(1).max(100)
+  author           String           /// @zod.string.min(1).max(50)
+  genre            genreEnum
+  isbn             isbn[]
+  available_copies Int              @default(0) /// @zod.number.min(0)
+  avg_rating       Float?           /// @zod.number.min(0).max(5)
+  publication_year DateTime         /// @zod.custom.use(z.string().date().transform((val) => new Date(val)))
+  description      String           /// @zod.string.min(10).max(1000)
+  cover_image      String?          /// @zod.string.url()
+  borrowing        borrowing[]
+  reservation      reservation[]
+  cart             cart[]
+  readHistory      readHistory[]
+
+  @@index([genre]) 
+}
+
+enum genreEnum {
+  Fiction
+  Non_Fiction
+  Science_Fiction
+  Fantasy
+  Mystery
+  Romance
+  Thriller
+  Biography
+  Historical
+  Self_Help
+}
+
+// ISBN model
+/// @zod.import(["import { alreadyExist } from '../../../utils/validation';", "import { isbn, book } from '@prisma/client';"])
+model isbn {
+  isbn     String @id   /// @zod.custom.use(z.string().regex(/^[0-9]{10,13}$/).refine(async (val) => !(await alreadyExist<isbn>("isbn", "isbn", val)), {message: "ISBN does not exist"}))          
+  book_id  String      /// @zod.custom.use(z.string().refine(async (val) => await alreadyExist<book>("book", "id", val), {message: "Book does not exist"}))
+  book     book @relation(fields: [book_id], references: [id])
+}
+
+// Borrowing model
+/// @zod.import(["import { alreadyExist } from '../../../utils/validation';", "import { user, book, finePayment } from '@prisma/client';"])
+model borrowing {
+  user_id     String            /// @zod.custom.use(z.string().refine(async (val) => await alreadyExist<user>("user", "id", val), {message: "User does not exist"}))
+  book_id     String            /// @zod.custom.use(z.string().refine(async (val) => await alreadyExist<book>("book", "id", val), {message: "Book does not exist"}))
+  borrow_date DateTime @default(now()) /// @zod.custom.use(z.string().date().transform((val) => new Date(val)))
+  due_date    DateTime                 /// @zod.custom.use(z.string().date().transform((val) => new Date(val)))
+  return_date DateTime?                /// @zod.custom.use(z.string().date().transform((val) => new Date(val)))
+  returned    Boolean  @default(false)
+  fine        Float?                   
+  paid        Boolean?                 
+  payment_id  String?           /// @zod.custom.use(z.string().refine(async (val) => await alreadyExist<finePayment>("finePayment", "id", val), {message: "Payment does not exist"}))
+  finePayments finePayment?            @relation(fields: [payment_id], references: [id])
+  user        user                     @relation(fields: [user_id], references: [id])
+  book        book                     @relation(fields: [book_id], references: [id])
+
+  @@id([user_id, book_id])
+  @@index([user_id])
+  @@index([book_id])
+}
+
+// Reservation model
+/// @zod.import(["import { alreadyExist } from '../../../utils/validation';", "import { user, book } from '@prisma/client';"])
+model reservation {
+  user_id            String          /// @zod.custom.use(z.string().refine(async (val) => await alreadyExist<user>("user", "id", val), {message: "User does not exist"}))
+  book_id            String          /// @zod.custom.use(z.string().refine(async (val) => await alreadyExist<book>("book", "id", val), {message: "Book does not exist"}))
+  reservation_date   DateTime        @default(now()) /// @zod.custom.use(z.string().date().transform((val) => new Date(val)))
+  reservation_status reservationStatusEnum @default(Not_collected)
+  user               user            @relation(fields: [user_id], references: [id])
+  book               book            @relation(fields: [book_id], references: [id])
+
+  @@id([user_id, book_id])
+  @@index([user_id])
+  @@index([book_id])
+}
+
+enum reservationStatusEnum {
+  Collected
+  Not_collected
+}
+
+// Cart model
+/// @zod.import(["import { alreadyExist } from '../../../utils/validation';", "import { user, book } from '@prisma/client';"])
+model cart {
+  user_id     String      /// @zod.custom.use(z.string().refine(async (val) => await alreadyExist<user>("user", "id", val), {message: "User does not exist"}))
+  book_id     String      /// @zod.custom.use(z.string().refine(async (val) => await alreadyExist<book>("book", "id", val), {message: "Book does not exist"}))
+  added_date  DateTime    @default(now()) /// @zod.custom.use(z.string().date().transform((val) => new Date(val)))
+  user        user        @relation(fields: [user_id], references: [id])
+  book        book        @relation(fields: [book_id], references: [id])
+
+  @@id([user_id, book_id])
+  @@index([user_id])
+  @@index([book_id])
+}
+
+// Notification model
+/// @zod.import(["import { alreadyExist } from '../../../utils/validation';", "import { user } from '@prisma/client';"])
+model notification {
+  id      String         @id @default(uuid()) 
+  user_id String         /// @zod.custom.use(z.string().refine(async (val) => await alreadyExist<user>("user", "id", val), {message: "User does not exist"}))
+  type    notificationType
+  content String          @db.Text           /// @zod.string.min(1).max(500)
+  is_read Boolean         @default(false)
+  user    user            @relation(fields: [user_id], references: [id])
+
+  @@index([user_id])
+  @@index([is_read])
+}
+
+enum notificationType {
+  DUE_DATE
+  FINE
+  RESERVATION
+}
+
+// Fine Payment model
+/// @zod.import(["import { alreadyExist } from '../../../utils/validation';", "import { user, finePayment } from '@prisma/client';"])
+model finePayment {
+  id                 String         @id @default(uuid()) 
+  borrowing_user_id  String         /// @zod.custom.use(z.string().refine(async (val) => await alreadyExist<user>("user", "id", val), {message: "User does not exist"}))
+  borrowing          borrowing[]
+  amount             Float
+  reference          String         @unique /// @zod.custom.use(z.string().min(1).max(100).refine(async (val) => !(await alreadyExist<finePayment>("finePayment", "reference", val)), { message: "Reference already exists" }))
+  paymentDate        DateTime       @default(now()) /// @zod.custom.use(z.string().date().transform((val) => new Date(val)))
+  user               user           @relation(fields: [borrowing_user_id], references: [id])
+
+  @@index([borrowing_user_id])
+}
+
+// Read history model
+/// @zod.import(["import { alreadyExist } from '../../../utils/validation';", "import { user, book } from '@prisma/client';"])
+model readHistory {
+  user_id   String         /// @zod.custom.use(z.string().refine(async (val) => await alreadyExist<user>("user", "id", val), {message: "User does not exist"}))
+  book_id   String         /// @zod.custom.use(z.string().refine(async (val) => await alreadyExist<book>("book", "id", val), {message: "Book does not exist"}))
+  finished  Boolean        @default(false)
+  rating    Int?           /// @zod.number.min(0).max(5)
+  review    String?        /// @zod.string.min(1).max(500)
+  user      user           @relation(fields: [user_id], references: [id])
+  book      book           @relation(fields: [book_id], references: [id])
+
+  @@id([user_id, book_id])
+  @@index([user_id])
+  @@index([book_id])
+}

@@ -1,0 +1,20 @@
+version: '3.4'
+
+services:
+  server:
+    image: server
+    container_name: server
+    build:
+      context: server
+      dockerfile: ./Dockerfile
+    environment:
+      NODE_ENV: development
+    env_file:
+      - ./Server/.env
+    volumes:
+      - ./Server/src:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - 3000:3000
+      - 9229:9229
+    command: ["npm", "run", "dev"]
