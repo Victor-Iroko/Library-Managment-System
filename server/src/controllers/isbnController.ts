@@ -6,6 +6,8 @@ import { StatusCodes } from "http-status-codes";
 
 
 export const addISBN = async (req: Request, res: Response) => {
+    // #swagger.summary = 'Add ISBN entry.'
+    // #swagger.description = 'Creates a new ISBN record.'
     ForbiddenError.from(req.ability).throwUnlessCan('create', 'isbn')
     const data = await createISBNSchema.parseAsync(req.body)
 
@@ -36,6 +38,8 @@ export const addISBN = async (req: Request, res: Response) => {
 }
 
 export const deleteISBN = async (req: Request, res: Response) => {
+    // #swagger.summary = 'Remove ISBN entry.'
+    // #swagger.description = 'Deletes a specific ISBN record.'
     ForbiddenError.from(req.ability).throwUnlessCan('delete', 'isbn')
     const authConditions = req.prismaAbility.isbn
     const deletedData = await isbnClient.deleteMany({
@@ -49,6 +53,8 @@ export const deleteISBN = async (req: Request, res: Response) => {
 }
 
 export const getBookIdByIsbn = async (req: Request, res: Response) => {
+    // #swagger.summary = 'Get book ID by ISBN.'
+    // #swagger.description = 'Retrieves the associated book ID using the ISBN.'
     const authConditions = req.prismaAbility.isbn
     const result = await isbnClient.findFirst({
         where: {

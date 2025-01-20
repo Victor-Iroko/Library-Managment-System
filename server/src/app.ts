@@ -24,6 +24,9 @@ import isbnRouter from './routes/isbnRoute';
 import paymentRouter from './routes/paymentRoute';
 import readHistoryRouter from './routes/readHistoryRoute';
 import reservationRouter from './routes/reservationRoute';
+import swaggerUi from 'swagger-ui-express'
+import swaggerDocument from './config/swagger-output.json'
+
 
 
 dotenv.config()
@@ -48,31 +51,87 @@ app.use(express.urlencoded({extended: false}))
 app.use(express.static(publicDir))
 
 
-// my middlewares
+// logging middlewares
 app.use(logMiddleware)
 
+
 // authentication routes
-app.use("/auth", authRouter)
+app.use("/auth", authRouter /* 
+    #swagger.tags = ['Auth'] 
+    */)
+
+// docs 
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.get('/db-docs', (_req: Request, res: Response) => {
+    // #swagger.tags = ['Docs']
+    // #swagger.summary = 'Retrieve API documentation.'
+    // #swagger.description = 'Provides the database documentation in a structured format.'
+    // #swagger.ignore = true
+    console.log(path.join(publicDir,"index.html"))
+    res.sendFile(path.join(publicDir,"index.html"))
+})
 
 // authentication middleware
 app.use(passport.initialize()) // don't know what it does, saw it in a tutorial
 app.use(authMiddleware)
 
 // routes
-app.use('/user', userRouter)
-app.use('/book', bookRouter)
-app.use('/borrow', borrowRouter)
-app.use('/cart', cartRouter)
-app.use('/isbn', isbnRouter)
-app.use('/payment', paymentRouter)
-app.use('/read-history', readHistoryRouter)
-app.use('/reservation', reservationRouter)
+app.use('/user', userRouter /* 
+    #swagger.tags = ['User']
 
-// docs 
-// app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-app.get('/db-docs', (_req: Request, res: Response) => {
-    res.sendFile(path.join(publicDir,"index.html"))
-})
+    #swagger.security = [{
+        "bearerAuth": []
+    }]   
+    */)
+app.use('/book', bookRouter /* 
+    #swagger.tags = ['Book']
+
+    #swagger.security = [{
+        "bearerAuth": []
+    }]   
+    */)
+app.use('/borrow', borrowRouter /* 
+    #swagger.tags = ['Borrow']
+
+    #swagger.security = [{
+        "bearerAuth": []
+    }]  
+    */)
+app.use('/cart', cartRouter /* 
+    #swagger.tags = ['Cart']
+
+    #swagger.security = [{
+        "bearerAuth": []
+    }] 
+    */)
+app.use('/isbn', isbnRouter /* 
+    #swagger.tags = ['Isbn']
+
+    #swagger.security = [{
+        "bearerAuth": []
+    }]  
+    */)
+app.use('/payment', paymentRouter /* 
+    #swagger.tags = ['Payment']
+
+    #swagger.security = [{
+        "bearerAuth": []
+    }]  
+    */)
+app.use('/read-history', readHistoryRouter /* 
+    #swagger.tags = ['Read History']
+
+    #swagger.security = [{
+        "bearerAuth": []
+    }] 
+    */)
+app.use('/reservation', reservationRouter /* 
+    #swagger.tags = ['Reservation']
+
+    #swagger.security = [{
+        "bearerAuth": []
+    }]  
+    */)
 
 
 // not found

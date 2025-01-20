@@ -1,9 +1,8 @@
 
 
 ### TO-DO
-- Github
-- Pagination, filtering and sorting
 - Swagger documentation
+- Remove available_copies when deleting an isbn
 - Docker
 - Deploying to vercel (or any other free platform)
 

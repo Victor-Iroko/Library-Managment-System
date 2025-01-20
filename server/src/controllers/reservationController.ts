@@ -3,15 +3,27 @@ import { reservationClient } from "../config/client"
 import { StatusCodes } from "http-status-codes"
 import { ForbiddenError } from "@casl/ability"
 import { reservationCreateSchema, reservationUpdateSchema } from "../schemas/extendedReservationSchema"
+import { buildQuery } from "../utils/parseQuery"
+import reservationSchema from "../schemas/zod-schemas/modelSchema/reservationSchema"
+import bookSchema from "../schemas/zod-schemas/modelSchema/bookSchema"
+import userSchema from "../schemas/zod-schemas/modelSchema/userSchema"
 
 
 export const getReservationsByUserId = async (req: Request, res: Response) => {
+    // #swagger.summary = 'User reservation details.'
+    // #swagger.description = 'Lists all current reservations made by a user.'
     const authConditions = req.prismaAbility.reservation
+    const {paginationQuery, filterQuery, orderByQuery} = await buildQuery(req, 'reservation', {'reservation': reservationSchema, 'book': bookSchema})
     const result = await reservationClient.findMany({
         where: {
             user_id: req.params.id,
-            ...authConditions
+            ...authConditions,
+            ...filterQuery
         },
+        orderBy: [
+            ...orderByQuery
+        ],
+        ...paginationQuery,
         include: {
             book: {
                 select: {
@@ -25,6 +37,8 @@ export const getReservationsByUserId = async (req: Request, res: Response) => {
 }
 
 export const reserveBook = async (req: Request, res: Response) => {
+    // #swagger.summary = 'Make a reservation.'
+    // #swagger.description = 'Creates a reservation entry for a user.'
     ForbiddenError.from(req.ability).throwUnlessCan('create', 'reservation')
     const data = await reservationCreateSchema.parseAsync(req.body)
     const result = await reservationClient.create({
@@ -34,6 +48,8 @@ export const reserveBook = async (req: Request, res: Response) => {
 }
 
 export const updateReservation = async (req: Request, res: Response) => {
+    // #swagger.summary = 'Update reservation.'
+    // #swagger.description = 'Modifies reservation details for a user and a book.'
     const data = await reservationUpdateSchema.parseAsync(req.body)
     Object.keys(data).forEach((field) => {
         ForbiddenError.from(req.ability).throwUnlessCan('update', 'reservation', field);
@@ -61,6 +77,8 @@ export const updateReservation = async (req: Request, res: Response) => {
 
 
 export const deleteReservation = async (req: Request, res: Response) => {
+    // #swagger.summary = 'Cancel reservation.'
+    // #swagger.description = 'Removes a specific reservation.'
     const authConditions = req.prismaAbility.reservation
     const deletedData = await reservationClient.deleteMany({
         where: {
@@ -73,12 +91,20 @@ export const deleteReservation = async (req: Request, res: Response) => {
 }
 
 export const getReservedUsersByBookId = async (req: Request, res: Response) => {
+    // #swagger.summary = 'Get reservers of a book.'
+    // #swagger.description = 'Lists users who have reserved a specific book.'
     const authConditions = req.prismaAbility.reservation
+    const {paginationQuery, orderByQuery, filterQuery} = await buildQuery(req, 'reservation', {'reservation': reservationSchema, 'user': userSchema, 'book': bookSchema})
     const result = await reservationClient.findMany({
         where: {
             book_id: req.params.id,
-            ...authConditions
+            ...authConditions,
+            ...filterQuery
         },
+        orderBy: [
+            ...orderByQuery
+        ],
+        ...paginationQuery,
         include: {
             user: {
                 select: {

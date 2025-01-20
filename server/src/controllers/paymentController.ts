@@ -1,12 +1,14 @@
 import { ForbiddenError } from "@casl/ability"
 import { Request, Response } from "express"
 import { makePayment, verifyPayment } from "../utils/payments"
-import { userClient } from "../config/client"
+import { borrowingClient, userClient } from "../config/client"
 import { makePaymentSchema } from "../schemas/extendedPaymentSchema"
 import { StatusCodes } from "http-status-codes"
 
 
 export const payFinesByUserId = async (req: Request, res: Response) => {
+    // #swagger.summary = 'Process payment.'
+    // #swagger.description = 'Initiates payment for a specific transaction by ID.'
     ForbiddenError.from(req.ability).throwUnlessCan('create', 'finePayment')
     const data = await makePaymentSchema.parseAsync(req.body)
     const user = await userClient.findFirst({
@@ -16,12 +18,28 @@ export const payFinesByUserId = async (req: Request, res: Response) => {
         }
     })
     if (user){
-        const url = await makePayment(user.email, data.amount)
+        // calculate the total fine the user owns
+        const amount = await borrowingClient.aggregate({
+            where: {
+                user_id: req.params.id,
+                book_id: {
+                    in: data.book_id
+                }
+            },
+            _sum: {
+                fine: true
+            }
+        })
+
+
+        const url = await makePayment(user.email, amount._sum.fine ?? 0)
         res.status(StatusCodes.OK).json(url)
     }
 }
 
 export const verifyPaymentByReference = async (req: Request, res: Response) => {
+    // #swagger.summary = 'Verify payment status.'
+    // #swagger.description = 'Fetches the status of a payment using a transaction reference.'
     ForbiddenError.from(req.ability).throwUnlessCan('create', 'finePayment')
     const paymentStatus = await verifyPayment(req.params.reference)
     if (paymentStatus) {

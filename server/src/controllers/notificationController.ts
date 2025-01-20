@@ -3,21 +3,33 @@ import { notificationClient } from "../config/client"
 import { StatusCodes } from "http-status-codes"
 import { notificationUpdateSchema } from "../schemas/extendedNotificationSchema"
 import { ForbiddenError } from "@casl/ability"
+import { buildQuery } from "../utils/parseQuery"
+import notificationSchema from "../schemas/zod-schemas/modelSchema/notificationSchema"
 
 
 export const getNotificationsByUserId = async (req: Request, res: Response) => {
+    // #swagger.summary = 'User notifications.'
+    // #swagger.description = 'Retrieves unread notifications for the given user by ID.'
     const authConditions = req.prismaAbility.notification
+    const {filterQuery, paginationQuery, orderByQuery} = await buildQuery(req, 'notification', {'notification': notificationSchema})
     const result = await notificationClient.findMany({
         where: {
             user_id: req.params.user_id,
-            ...authConditions
-        }
+            ...authConditions,
+            ...filterQuery
+        },
+        orderBy: [
+            ...orderByQuery
+        ],
+        ...paginationQuery
     })
 
     res.status(StatusCodes.OK).json(result)
 }
 
 export const updateNotificationsById = async (req: Request, res: Response) => {
+    // #swagger.summary = 'Update user notifications.'
+    // #swagger.description = 'Marks notifications as read or updates notification preferences.'
     const data = await notificationUpdateSchema.parseAsync(req.body)
     Object.keys(data).forEach((field) => {
             ForbiddenError.from(req.ability).throwUnlessCan('update', 'notification', field);
