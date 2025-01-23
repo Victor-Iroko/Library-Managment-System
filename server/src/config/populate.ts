@@ -102,7 +102,7 @@ async function seedISBN(savedBooks: book[], transaction: ExtendedPrismaServiceTr
 
 async function seedBorrowings(savedUsers: user[], savedBooks: book[], transaction: ExtendedPrismaServiceTransaction) {
   try {
-    const borrowings = Array.from({ length: 100 }, () => {
+    const borrowings = Array.from({ length: 1000 }, () => {
       const returnDate = faker.datatype.boolean() ? faker.date.recent() : null;
       return {
         user_id: faker.helpers.arrayElement(savedUsers).id,
@@ -128,7 +128,7 @@ async function seedBorrowings(savedUsers: user[], savedBooks: book[], transactio
 
 async function seedReservations(savedUsers: user[], savedBooks: book[], transaction: ExtendedPrismaServiceTransaction) {
   try {
-    const reservations = Array.from({ length: 180 }, () => ({
+    const reservations = Array.from({ length: 220 }, () => ({
       user_id: faker.helpers.arrayElement(savedUsers).id,
       book_id: faker.helpers.arrayElement(savedBooks).id,
       reservation_date: faker.date.past(),
@@ -257,7 +257,7 @@ async function populate() {
       await updateBookDependencies(transaction)
     },
     {
-      timeout: 10000
+      timeout: 15000
     }
     )
   

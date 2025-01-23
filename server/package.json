@@ -4,13 +4,16 @@
   "main": "src/app.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon src/app.ts",
-    "dev:studio": "concurrently \"npm run dev\" \"prisma studio\"",
-    "start": "tsc && node dist/app.js",
-    "migrate": "prisma migrate dev",
-    "generate": "prisma generate --sql zod",
+    "migrate:dev": "prisma migrate dev",
+    "generate": "prisma generate --sql",
+    "deploy:migrations": "prisma migrate deploy",
     "populate": "ts-node src/config/populate.ts",
-    "swagger": "ts-node src/config/swagger.ts"
+    "start:dev": "concurrently \"nodemon src/app.ts\" \"prisma studio\"",
+    "migrate:start_dev": "npm run deploy:migrations && npm run start:dev",
+    "migrate:populate:start_dev": "npm run deploy:migrations && npm run populate && npm run start:dev",
+    "build": "tsc",
+    "start": "node dist/app.js",
+    "migrate:start": "npm run deploy:migrations && npm start"
   },
   "keywords": [],
   "author": "",
@@ -41,6 +44,7 @@
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.2",
     "zod-prisma-types": "^3.2.1"
+    
   },
   "dependencies": {
     "@casl/ability": "^6.7.3",
