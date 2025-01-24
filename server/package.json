@@ -8,7 +8,7 @@
     "generate": "prisma generate --sql",
     "deploy:migrations": "prisma migrate deploy",
     "populate": "ts-node src/config/populate.ts",
-    "start:dev": "concurrently \"nodemon src/app.ts\" \"prisma studio\"",
+    "start:dev": "concurrently \"nodemon -L src/app.ts\" \"prisma studio\"",
     "migrate:start_dev": "npm run deploy:migrations && npm run start:dev",
     "migrate:populate:start_dev": "npm run deploy:migrations && npm run populate && npm run start:dev",
     "build": "tsc",
