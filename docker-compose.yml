@@ -12,9 +12,9 @@ services:
     ports:
       - "${PORT}:${PORT}"
       - "5555:5555" # this is the port for prisma studio
-    # volumes:
-    #   - .:/usr/src/app
-    #   - /usr/src/app/node_modules
+    volumes: # for development 
+      - ./server:/usr/src/app
+      - /usr/src/app/node_modules
     depends_on:
       db:
         condition: service_healthy
@@ -50,6 +50,9 @@ services:
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
     ports:
       - "5050:80"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
 
 volumes:
   pgdata: 
+  pgadmin-data:

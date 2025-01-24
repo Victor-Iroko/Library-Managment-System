@@ -9,8 +9,6 @@ import bookSchema from "../schemas/zod-schemas/modelSchema/bookSchema"
 
 
 export const getReadHistoryByUserId = async (req: Request, res: Response) => {
-    // #swagger.summary = 'User read history.'
-    // #swagger.description = 'Retrieves the reading history of a specific user.'
     const authConditions = req.prismaAbility.readHistory
     const {paginationQuery, orderByQuery, filterQuery} = await buildQuery(req, 'readHistory', {'readHistory': readHistorySchema, 'book': bookSchema})
     const result = await readHistoryClient.findMany({
@@ -36,8 +34,6 @@ export const getReadHistoryByUserId = async (req: Request, res: Response) => {
 }
 
 export const addBookToReadHistory = async (req: Request, res: Response) => {
-    // #swagger.summary = 'Add read history.'
-    // #swagger.description = 'Records a book as read by a user'
     ForbiddenError.from(req.ability).throwUnlessCan('create', 'readHistory')
     const data = await readHistoryCreateSchema.parseAsync(req.body)
     const result = await readHistoryClient.create({
@@ -48,8 +44,6 @@ export const addBookToReadHistory = async (req: Request, res: Response) => {
 }
 
 export const updateReadHistory = async (req: Request, res: Response) => {
-    // #swagger.summary = 'Update read history.'
-    // #swagger.description = 'Modifies a user's reading history for a specific book.'
     const data = await readHistoryUpdateSchema.parseAsync(req.body)
     Object.keys(data).forEach((field) => {
         ForbiddenError.from(req.ability).throwUnlessCan('update', 'readHistory', field);

@@ -11,8 +11,6 @@ import userSchema from "../schemas/zod-schemas/modelSchema/userSchema"
 
 
 export const getBorrowHistoryByUserId = async (req: Request, res: Response) => {
-    // #swagger.summary = 'User borrow history.'
-    // #swagger.description = 'Retrieves the borrowing history for a specific user by ID.'
     const authConditions = req.prismaAbility.borrowing
     const {filterQuery, orderByQuery, paginationQuery} = await buildQuery(req, 'borrowing', {'borrowing': borrowingSchema, 'book': bookSchema, 'finePayment': finePaymentSchema})
     const result = await borrowingClient.findMany({
@@ -43,8 +41,6 @@ export const getBorrowHistoryByUserId = async (req: Request, res: Response) => {
 }
 
 export const getBorrowedUsersByBookId = async (req: Request, res: Response) => {
-    // #swagger.summary = 'Get borrowers of a book.'
-    // #swagger.description = 'Lists users who have borrowed a specific book.'
     const authConditions = req.prismaAbility.borrowing
     const {orderByQuery, paginationQuery, filterQuery} = await buildQuery(req, 'borrowing', {'borrowing': borrowingSchema, 'user': userSchema})
     const result = await borrowingClient.findMany({
@@ -72,8 +68,6 @@ export const getBorrowedUsersByBookId = async (req: Request, res: Response) => {
 }
 
 export const createBorrow = async (req: Request, res: Response) => {
-    // #swagger.summary = 'Borrow a book.'
-    // #swagger.description = 'Creates a new borrow request for a user.'
     ForbiddenError.from(req.ability).throwUnlessCan('create', 'borrowing')
     const data = await borrowCreateSchema.parseAsync(req.body)
     const result = await borrowingClient.create({
@@ -84,8 +78,6 @@ export const createBorrow = async (req: Request, res: Response) => {
 
 
 export const updateBorrow = async (req: Request, res: Response) => {
-    // #swagger.summary = 'Update borrow record.'
-    // #swagger.description = 'Updates the status or return details for a book borrowed by a user.'
     const data = await borrowUpdateSchema.parseAsync(req.body)
     Object.keys(data).forEach((field) => {
         ForbiddenError.from(req.ability).throwUnlessCan('update', 'borrowing', field)

@@ -9,8 +9,6 @@ import bookSchema from "../schemas/zod-schemas/modelSchema/bookSchema"
 
 
 export const getCartByUserId = async (req: Request, res: Response) => {
-    // #swagger.summary = 'User cart details.'
-    // #swagger.description = 'Fetches the list of books currently in the user's cart.'
     const authConditions = req.prismaAbility.cart
     const {paginationQuery, orderByQuery, filterQuery} = await buildQuery(req, 'cart', {'cart': cartSchema, 'book': bookSchema})
     const result = await cartClient.findMany({
@@ -37,8 +35,6 @@ export const getCartByUserId = async (req: Request, res: Response) => {
 
 
 export const addBookToCart = async (req: Request, res: Response) => {
-    // #swagger.summary = 'Add to cart.'
-    // #swagger.description = 'Adds a book to the user's cart.'
     ForbiddenError.from(req.ability).throwUnlessCan('create', 'cart')
     const data = await cartCreateSchema.parseAsync(req.body)
     const result = await cartClient.create({
@@ -48,8 +44,6 @@ export const addBookToCart = async (req: Request, res: Response) => {
 }
 
 export const removeBookFromCart = async (req: Request, res:Response) => {
-    // #swagger.summary = 'Remove from cart.'
-    // #swagger.description = 'Removes a specific book from the user's cart.'
     const authConditions = req.prismaAbility.cart
     const deletedData = await cartClient.deleteMany({
         where: {

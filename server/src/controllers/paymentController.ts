@@ -7,8 +7,6 @@ import { StatusCodes } from "http-status-codes"
 
 
 export const payFinesByUserId = async (req: Request, res: Response) => {
-    // #swagger.summary = 'Process payment.'
-    // #swagger.description = 'Initiates payment for a specific transaction by ID.'
     ForbiddenError.from(req.ability).throwUnlessCan('create', 'finePayment')
     const data = await makePaymentSchema.parseAsync(req.body)
     const user = await userClient.findFirst({
@@ -38,8 +36,6 @@ export const payFinesByUserId = async (req: Request, res: Response) => {
 }
 
 export const verifyPaymentByReference = async (req: Request, res: Response) => {
-    // #swagger.summary = 'Verify payment status.'
-    // #swagger.description = 'Fetches the status of a payment using a transaction reference.'
     ForbiddenError.from(req.ability).throwUnlessCan('create', 'finePayment')
     const paymentStatus = await verifyPayment(req.params.reference)
     if (paymentStatus) {

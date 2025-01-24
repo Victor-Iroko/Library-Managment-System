@@ -9,9 +9,6 @@ import bookSchema from "../schemas/zod-schemas/modelSchema/bookSchema";
 
 
 export const getBooks = async (req: Request, res: Response) => {
-    // #swagger.summary = 'Retrieve all books.'
-    // #swagger.description = 'Fetches details of all available books.'
-    /* #swagger.parameters['$ref'] = ['#components/parameters/page', '#components/parameters/limit'] */
     const authConditions = req.prismaAbility.book
     const {filterQuery, paginationQuery, orderByQuery} = await buildQuery(req, 'book', {'book': bookSchema})
     const result = await bookClient.findMany({
@@ -28,8 +25,6 @@ export const getBooks = async (req: Request, res: Response) => {
 }
 
 export const getBookById = async (req: Request, res: Response) => {
-    // #swagger.summary = 'Retrieve book details.'
-    // #swagger.description = 'Fetches detailed information about a specific book by its ID.'
     const authConditions = req.prismaAbility.book
     const result = await bookClient.findFirst({
         where: {
@@ -56,8 +51,6 @@ export const getBookById = async (req: Request, res: Response) => {
 }
 
 export const addBook = async (req: Request, res: Response) => {
-    // #swagger.summary = 'Add a new book.'
-    // #swagger.description = 'Creates a new book entry in the system.'
     ForbiddenError.from(req.ability).throwUnlessCan('create', 'book')
     const data = await bookCreateSchema.parseAsync(req.body)
     const result = await bookClient.create({
@@ -68,8 +61,6 @@ export const addBook = async (req: Request, res: Response) => {
 }
 
 export const updateBookInfo = async (req: Request, res: Response) => {
-    // #swagger.summary = 'Update book information.'
-    // #swagger.description = 'Modifies details of a book identified by its unique ID.'
     const data = await bookUpdateSchema.parseAsync(req.body)
     Object.keys(data).forEach((field) => {
         ForbiddenError.from(req.ability).throwUnlessCan('update', 'book', field);
@@ -95,8 +86,6 @@ export const updateBookInfo = async (req: Request, res: Response) => {
 
 
 export const deleteBook = async (req: Request, res: Response) => {
-    // #swagger.summary = 'Delete a book.'
-    // #swagger.description = 'Removes a book from the catalog.'
     ForbiddenError.from(req.ability).throwUnlessCan('delete', 'book')
     const authConditions = req.prismaAbility.book
     const deletedData = await bookClient.deleteMany({

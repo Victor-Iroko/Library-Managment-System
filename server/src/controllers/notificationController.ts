@@ -8,8 +8,6 @@ import notificationSchema from "../schemas/zod-schemas/modelSchema/notificationS
 
 
 export const getNotificationsByUserId = async (req: Request, res: Response) => {
-    // #swagger.summary = 'User notifications.'
-    // #swagger.description = 'Retrieves unread notifications for the given user by ID.'
     const authConditions = req.prismaAbility.notification
     const {filterQuery, paginationQuery, orderByQuery} = await buildQuery(req, 'notification', {'notification': notificationSchema})
     const result = await notificationClient.findMany({
@@ -28,8 +26,6 @@ export const getNotificationsByUserId = async (req: Request, res: Response) => {
 }
 
 export const updateNotificationsById = async (req: Request, res: Response) => {
-    // #swagger.summary = 'Update user notifications.'
-    // #swagger.description = 'Marks notifications as read or updates notification preferences.'
     const data = await notificationUpdateSchema.parseAsync(req.body)
     Object.keys(data).forEach((field) => {
             ForbiddenError.from(req.ability).throwUnlessCan('update', 'notification', field);
