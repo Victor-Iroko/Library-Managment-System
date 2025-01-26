@@ -12,6 +12,7 @@ services:
     ports:
       - "${PORT}:${PORT}"
       - "5555:5555" # this is the port for prisma studio
+    command: ["npm", "run", "migrate:populate:start_dev"] # uncomment only when running for the first time (to populate the database)
     volumes: # for development 
       - ./server:/usr/src/app
       - /usr/src/app/node_modules

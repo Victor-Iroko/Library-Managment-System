@@ -30,7 +30,7 @@ export const payFinesByUserId = async (req: Request, res: Response) => {
         })
 
 
-        const url = await makePayment(user.email, amount._sum.fine ?? 0)
+        const url = await makePayment(user.email, Math.round(amount._sum.fine ?? 0)) // it needs to be an integer (don't know why paystack doesn't accept float or maybe its just my configuration)
         res.status(StatusCodes.OK).json(url)
     }
 }

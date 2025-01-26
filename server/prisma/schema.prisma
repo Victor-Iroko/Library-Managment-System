@@ -139,7 +139,7 @@ enum genreEnum {
 model isbn {
   isbn     String @id   /// @zod.custom.use(z.string().regex(/^[0-9]{10,13}$/).refine(async (val) => !(await alreadyExist<isbn>("isbn", "isbn", val)), {message: "ISBN does not exist"}))          
   book_id  String      /// @zod.custom.use(z.string().refine(async (val) => await alreadyExist<book>("book", "id", val), {message: "Book does not exist"}))
-  book     book @relation(fields: [book_id], references: [id])
+  book     book @relation(fields: [book_id], references: [id], onDelete: Cascade)
 }
 
 // Borrowing model
@@ -154,9 +154,9 @@ model borrowing {
   fine        Float?                   
   paid        Boolean?                 
   payment_id  String?           /// @zod.custom.use(z.string().refine(async (val) => await alreadyExist<finePayment>("finePayment", "id", val), {message: "Payment does not exist"}))
-  finePayments finePayment?            @relation(fields: [payment_id], references: [id])
-  user        user                     @relation(fields: [user_id], references: [id])
-  book        book                     @relation(fields: [book_id], references: [id])
+  finePayments finePayment?            @relation(fields: [payment_id], references: [id], onDelete: SetNull)
+  user        user                     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  book        book                     @relation(fields: [book_id], references: [id], onDelete: Cascade)
 
   @@id([user_id, book_id])
   @@index([user_id])
@@ -170,8 +170,8 @@ model reservation {
   book_id            String          /// @zod.custom.use(z.string().refine(async (val) => await alreadyExist<book>("book", "id", val), {message: "Book does not exist"}))
   reservation_date   DateTime        @default(now()) /// @zod.custom.use(z.string().date().transform((val) => new Date(val)))
   reservation_status reservationStatusEnum @default(Not_collected)
-  user               user            @relation(fields: [user_id], references: [id])
-  book               book            @relation(fields: [book_id], references: [id])
+  user               user            @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  book               book            @relation(fields: [book_id], references: [id], onDelete: Cascade)
 
   @@id([user_id, book_id])
   @@index([user_id])
@@ -189,8 +189,8 @@ model cart {
   user_id     String      /// @zod.custom.use(z.string().refine(async (val) => await alreadyExist<user>("user", "id", val), {message: "User does not exist"}))
   book_id     String      /// @zod.custom.use(z.string().refine(async (val) => await alreadyExist<book>("book", "id", val), {message: "Book does not exist"}))
   added_date  DateTime    @default(now()) /// @zod.custom.use(z.string().date().transform((val) => new Date(val)))
-  user        user        @relation(fields: [user_id], references: [id])
-  book        book        @relation(fields: [book_id], references: [id])
+  user        user        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  book        book        @relation(fields: [book_id], references: [id], onDelete: Cascade)
 
   @@id([user_id, book_id])
   @@index([user_id])
@@ -205,7 +205,7 @@ model notification {
   type    notificationType
   content String          @db.Text           /// @zod.string.min(1).max(500)
   is_read Boolean         @default(false)
-  user    user            @relation(fields: [user_id], references: [id])
+  user    user            @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@index([user_id])
   @@index([is_read])
@@ -226,7 +226,7 @@ model finePayment {
   amount             Float
   reference          String         @unique /// @zod.custom.use(z.string().min(1).max(100).refine(async (val) => !(await alreadyExist<finePayment>("finePayment", "reference", val)), { message: "Reference already exists" }))
   paymentDate        DateTime       @default(now()) /// @zod.custom.use(z.string().date().transform((val) => new Date(val)))
-  user               user           @relation(fields: [borrowing_user_id], references: [id])
+  user               user           @relation(fields: [borrowing_user_id], references: [id], onDelete: Cascade)
 
   @@index([borrowing_user_id])
 }
@@ -239,8 +239,8 @@ model readHistory {
   finished  Boolean        @default(false)
   rating    Int?           /// @zod.number.min(0).max(5)
   review    String?        /// @zod.string.min(1).max(500)
-  user      user           @relation(fields: [user_id], references: [id])
-  book      book           @relation(fields: [book_id], references: [id])
+  user      user           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  book      book           @relation(fields: [book_id], references: [id], onDelete: Cascade)
 
   @@id([user_id, book_id])
   @@index([user_id])

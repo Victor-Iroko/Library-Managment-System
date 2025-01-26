@@ -25,7 +25,7 @@ RUN npm run build
 FROM base AS development
 ENV NODE_ENV=development
 EXPOSE 3000
-CMD ["npm", "run", "migrate:populate:start_dev"]
+CMD ["npm", "run", "migrate:start_dev"]
 
 # Production stage
 FROM build AS production
